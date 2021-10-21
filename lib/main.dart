@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      //Ств екземпляр та побудову наших віджетів
       title: 'My Expenses',
       home: MyHomePage(),
       theme: ThemeData(
@@ -32,71 +33,59 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Transaction> _userTransaction = [
-    // Transaction(
-    //   't1',
-    //   'Shoes',
-    //   69.99,
-    //   DateTime.now(),
-    // ),
-    // Transaction(
-    //   't2',
-    //   'Tea',
-    //   12.54,
-    //   DateTime.now(),
-    // ),
-    // Transaction(
-    //   't3',
-    //   'Sugar',
-    //   3.29,
-    //   DateTime.now(),
-    // ),
-    // Transaction(
-    //   't3',
-    //   'Bananas',
-    //   55.54,
-    //   DateTime.now(),
-    // ),
-  ];
+  final List<Transaction> _userTransaction = []; //список транзакцій
 
   List<Transaction> get _recentTransactions {
+    //нещодавні транзакції (в даному випадку за 7 днів)
     return _userTransaction.where((tx) {
+      //(tx) - проходимо но кожному елементі
       return tx.date.isAfter(
         DateTime.now().subtract(
-          Duration(days: 7),
+          Duration(days: 7), //Повертає дні від (зараз - 7) тобто тиждень
         ),
       );
     }).toList();
   }
 
-  void _addNewTransaction(String txTitle, double txAmount) {
+  void _addNewTransaction(
+      String txTitle, double txAmount, DateTime chosenDate) {
     final newTx = Transaction(
-      DateTime.now().toString(),
-      txTitle,
-      txAmount,
-      DateTime.now(),
+      DateTime.now().toString(), // id
+      txTitle, //title
+      txAmount, //price
+      chosenDate, // date
     );
 
     setState(() {
       _userTransaction.add(newTx);
     });
-  }
+  } // _addTransaction
 
   void _startAddNewTransaction(BuildContext ctx) {
     showModalBottomSheet(
-      context: ctx,
+      // ModalButton in AppBar
+      context:
+          ctx, // Вказуємо контекст (Використавується для пошуку (Навігація) контексту з яким ми працюємо)
       builder: (_) {
+        // використовується для побудови відображення віджету при виклику нашого метода
         return NewTransaction(_addNewTransaction);
       },
     );
+  } // _startAddNewTransaction
+
+  void _deleteTransaction(String id) {
+    setState(() {
+      _userTransaction.removeWhere((tx) => tx.id == id); //Видаляємо транзакцію зі списку звіряючи її ID
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Створює дизайн materialapp
       appBar: AppBar(
         title: Text(
-          "My Expenses",
+          "Мої витрати",
         ),
         actions: [
           IconButton(
@@ -106,12 +95,13 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: SingleChildScrollView(
+        // Щоб віджет можна було скролити
         child: Column(
           //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Chart(_recentTransactions),
-            TransactionList(_userTransaction),
+            TransactionList(_userTransaction, _deleteTransaction),
           ],
         ),
       ),
