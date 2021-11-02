@@ -9,49 +9,58 @@ class ChartBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: 18,
-          child: FittedBox(
-            child: Text('₴${spendingAmount.toStringAsFixed(0)}'), //Price in the chart
-          ),
-        ),
-        SizedBox(
-          height: 4,
-        ),
-        Container(
-          height: 60,
-          width: 10,
-          child: Stack(  //діаграма
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.grey,
-                    width: 1,
-                  ),
-                  color: Color.fromRGBO(220, 220, 220, 1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
+    return LayoutBuilder( //Об'єкт який приймає параметр контесту та обмеження, має інформацію про висоту та ширину об'єкта, який повертає.
+      builder: (ctx, constraints) {
+        return Column(
+          children: [
+            Container(
+              height: constraints.maxHeight * 0.15,
+              child: FittedBox(
+                child: Text(
+                    '₴${spendingAmount.toStringAsFixed(0)}'), //Price in the chart
               ),
-              FractionallySizedBox(
-                heightFactor: spendingPct,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: BorderRadius.circular(20),
+            ),
+            SizedBox(
+              height: constraints.maxHeight * 0.05,
+            ),
+            Container(
+              height: constraints.maxHeight * 0.6,
+              width: 10,
+              child: Stack(
+                //діаграма
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey,
+                        width: 1,
+                      ),
+                      color: Color.fromRGBO(220, 220, 220, 1),
+                      borderRadius: BorderRadius.circular(
+                          20), // сірі колбочки(шкала витрат)
+                    ),
                   ),
-                ),
+                  FractionallySizedBox(
+                    //Віджет який накладається на наш контейнер, в якому відображається шкала витрат
+                    heightFactor: spendingPct, //Для заповнення шкали втрат
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: BorderRadius.circular(
+                            20), //Звповнення нашої шкали відносно витрат
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 4,
-        ),
-        Text(label),
-      ],
+            ),
+            SizedBox(
+              height: constraints.maxHeight * 0.05,
+            ),
+            Container(height: constraints.maxHeight * 0.15, child: Text(label),),
+          ],
+        );
+      },
     );
   }
 }

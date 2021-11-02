@@ -1,4 +1,7 @@
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../widgets/adaptive_flat_button.dart';
 import 'package:intl/intl.dart';
 
 class NewTransaction extends StatefulWidget {
@@ -41,6 +44,7 @@ class _NewTransactionState extends State<NewTransaction> {
     //Опрацювання дат з якими ми можемо працювати під час додавання транзакції
     showDatePicker(
       context: context,
+      locale : const Locale("uk","UK"),
       initialDate: DateTime.now(), // Ініціалізація дати
       firstDate: DateTime(2021), // дата до котрої ми можемо вернутись
       lastDate: DateTime.now(), // остання дата яку ми можемо вибрати (зараз)
@@ -59,52 +63,52 @@ class _NewTransactionState extends State<NewTransaction> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      child: Container(
-        padding: EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            TextField(
-              // поле для заповнення текстом
-              decoration: InputDecoration(labelText: 'Назва'),
-              controller: _titleController, // збереження введеного
-              onSubmitted: (_) =>
-                  _submitData(), // для додавання даних через значок DONE на клавіатурі
-            ),
-            TextField(
-              decoration: InputDecoration(labelText: 'Вартість'),
-              controller: _amountController, // збереження введеного
-              keyboardType: TextInputType.number, // лише номерна клавіатура
-              onSubmitted: (_) =>
-                  _submitData(), // для додавання даних через значок DONE на клавіатурі
-            ),
-            Container( // Відображженя та вибір дати
-              height: 70,
-              child: Row(
-                children: [
-                  Text(DateFormat('d/M/y').format(_selectedDate)),
-                  // ignore: deprecated_member_use
-                  FlatButton(
-                    textColor: Theme.of(context).primaryColor,
-                    onPressed: _presentDatePicker,
-                    child: Text(
-                      'Вибрати дату',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  )
-                ],
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 5,
+        child: Container(
+          padding: EdgeInsets.only(
+            top: 10,
+            left: 10,
+            right: 10,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 10,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              TextField(
+                // поле для заповнення текстом
+                decoration: InputDecoration(labelText: 'Назва'),
+                controller: _titleController, // збереження введеного
+                onSubmitted: (_) =>
+                    _submitData(), // для додавання даних через значок DONE на клавіатурі
               ),
-            ),
-            // ignore: deprecated_member_use
-            RaisedButton(
-              onPressed: _submitData,
-              color: Theme.of(context).primaryColor,
-              textColor: Colors.white,
-              child: Text('Add transaction'),
-            ),
-          ],
+              TextField(
+                decoration: InputDecoration(labelText: 'Вартість'),
+                controller: _amountController, // збереження введеного
+                keyboardType: TextInputType.number, // лише номерна клавіатура
+                onSubmitted: (_) =>
+                    _submitData(), // для додавання даних через значок DONE на клавіатурі
+              ),
+              Container(
+                // Відображженя та вибір дати
+                height: 70,
+                child: Row(
+                  children: [
+                    Text(DateFormat('d/M/y').format(_selectedDate)),
+                    AdaptiveFlatButton('Вибрати дату', _presentDatePicker),
+                  ],
+                ),
+              ),
+              // ignore: deprecated_member_use
+              RaisedButton(
+                onPressed: _submitData,
+                color: Theme.of(context).primaryColor,
+                textColor: Colors.white,
+                child: Text('Add transaction'),
+              ),
+            ],
+          ),
         ),
       ),
     );

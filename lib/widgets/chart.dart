@@ -19,7 +19,7 @@ class Chart extends StatelessWidget {
             recentTransaction[i].date.year == weekDay.year) {
           totalSum += recentTransaction[i].amount;
         }
-      }
+      } //Звіряємо транзакції за певний день та сумуємо витрати (за цей день)
 
       return {
         'day': DateFormat.E().format(weekDay).substring(0, 1), //substring скільки символів виводиться (0, 1) Тобто в даному випадку один

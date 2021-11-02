@@ -1,8 +1,14 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import './widgets/chart.dart';
 import './widgets/new_transaction.dart';
 import './widgets/transaction_list.dart';
 import './models/tansaction.dart';
+
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,6 +18,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: [GlobalMaterialLocalizations.delegate],
+      supportedLocales: [
+        const Locale('uk'),
+        const Locale('us'),
+      ],
       //Ств екземпляр та побудову наших віджетів
       title: 'My Expenses',
       home: MyHomePage(),
@@ -34,6 +45,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final List<Transaction> _userTransaction = []; //список транзакцій
+  bool _showChart = false;
 
   List<Transaction> get _recentTransactions {
     //нещодавні транзакції (в даному випадку за 7 днів)
@@ -57,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     setState(() {
-      _userTransaction.add(newTx);
+      _userTransaction.add(newTx); //Додаємо транзакцію
     });
   } // _addTransaction
 
@@ -75,41 +87,127 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _deleteTransaction(String id) {
     setState(() {
-      _userTransaction.removeWhere((tx) => tx.id == id); //Видаляємо транзакцію зі списку звіряючи її ID
+      _userTransaction.removeWhere(
+          (tx) => tx.id == id); //Видаляємо транзакцію зі списку звіряючи її ID
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Створює дизайн materialapp
-      appBar: AppBar(
-        title: Text(
-          "Мої витрати",
-        ),
-        actions: [
-          IconButton(
-            onPressed: () => _startAddNewTransaction(context),
-            icon: Icon(Icons.add),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation ==
+        Orientation.landscape; //Якщо наш гаджет в альбомному режимі
+    final PreferredSizeWidget appBar = (Platform.isIOS
+        ? CupertinoNavigationBar(
+            middle: Text(
+              "Мої витрати",
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min, //зменшення аппбару
+              children: [
+                GestureDetector(
+                  // '+' в аппбарі на ios
+                  child: Icon(CupertinoIcons.add),
+                  onTap: () => _startAddNewTransaction(context),
+                )
+              ],
+            ))
+        : AppBar(
+            //Присвоюємо змінну щоб ми могли отримати дані про висоту, яку займає аппБар
+            title: Text(
+              "Мої витрати",
+            ),
+            actions: [
+              // Те що є в appBar
+              IconButton(
+                onPressed: () => _startAddNewTransaction(context),
+                icon: Icon(Icons.add),
+              ),
+            ],
+          )) as PreferredSizeWidget;
+    final txListWidget = Container(
+        // Transactions List
+        height: (mediaQuery.size
+                    .height - //MediaQuery - дозволяє отримати інформацію про орієнтацію пристрою, заходи, налаштування користувача тощо.
+                appBar.preferredSize.height -
+                mediaQuery.padding.top) *
+            0.75,
+        child: TransactionList(_userTransaction, _deleteTransaction));
+    final pageBody = SafeArea(
+      //SafeArea - віджет, який задає дочірньому елементи відступи, щоб уникнути пересікання з зарезервованими місцями (такі як статус бар і т.д)
+      //Перенесли тіло в цю змінну щоб не дублювати код для ІОS/Android
+      child: SingleChildScrollView(
         // Щоб віджет можна було скролити
         child: Column(
           //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Chart(_recentTransactions),
-            TransactionList(_userTransaction, _deleteTransaction),
+            if (isLandscape)
+              Row(
+                //Якщо альбомний режим тоді відображати цей віджет
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Show Chart'),
+                  Switch.adaptive(
+                    //Кнопка переключення
+                    value: _showChart, //true or false
+                    onChanged: (bool val) {
+                      setState(() {
+                        _showChart = val; //при перемиканні змінюємо наш State
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ////////////////////////////////////////////////////////////////////
+            // Якщо ми не в альбомному режимі то відображати віджети будемо так
+            if (!isLandscape)
+              Container(
+                  height: (mediaQuery.size
+                              .height - //Беремо всю висоту і віднімаємо висоту аппБару + лінії статусу (зверху)
+                          appBar.preferredSize
+                              .height - // Отримуємо дані аппБару за допомогою preferredSize
+                          mediaQuery.padding
+                              .top) * // Забираємо нашу лінію статусу зверху
+                      0.3, // відношення у відсотках щодо висоти
+                  child: Chart(_recentTransactions)),
+            if (!isLandscape) txListWidget,
+            ////////////////////////////////////////////////////////////////////
+            if (isLandscape)
+              _showChart // Це змінна за допомогою якої при зміні значення ми відображаємо Діаграму чи пранзакції в альбомному відображенні
+                  // if false
+                  ? Container(
+                      height: (mediaQuery.size
+                                  .height - //Беремо всю висоту і віднімаємо висоту аппБару + лінії статусу (зверху)
+                              appBar.preferredSize
+                                  .height - // Отримуємо дані аппБару за допомогою preferredSize
+                              mediaQuery.padding
+                                  .top) * // Забираємо нашу лінію статусу зверху
+                          0.7, // відношення у відсотках щодо висоти
+                      child: Chart(_recentTransactions))
+                  // if true
+                  : txListWidget //Присвоїна змінна віджету, оскільки ми оперуємо ним в декількох місьцях (насправді це хардкод, але в даному випадку це єдине рішення)
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => _startAddNewTransaction(context),
-      ),
     );
+    return Platform.isIOS
+        ? CupertinoPageScaffold(
+            child: pageBody,
+            navigationBar: appBar as ObstructingPreferredSizeWidget,
+          )
+        : Scaffold(
+            // Створює дизайн materialapp
+            appBar: appBar,
+            body: pageBody,
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+            floatingActionButton: Platform.isIOS
+                ? Container()
+                : FloatingActionButton(
+                    child: Icon(Icons.add),
+                    onPressed: () => _startAddNewTransaction(context),
+                  ), //Плаваюча пнопка (в даному випадку це '+' знизу)
+          );
   }
 }
