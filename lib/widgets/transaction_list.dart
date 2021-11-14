@@ -1,8 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import "package:flutter/material.dart";
-import 'package:intl/intl.dart';
-//import 'package:intl/intl.dart';
+
+import './transaction_item.dart';
 
 class TransactionList extends StatelessWidget {
   final List transaction;
@@ -38,52 +38,18 @@ class TransactionList extends StatelessWidget {
               ],
             );
           })
-        : ListView.builder(
+        : ListView(
             // Інакше виводмо наш список транзакцій
-            itemBuilder: (ctx, index) {
-              //ctx певний ств віджет, індекс це його номирація
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 5),
-                elevation: 5,
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    radius: 30,
-                    child: Padding(
-                      padding: EdgeInsets.all(6),
-                      child: FittedBox(
-                        child: Text(
-                            '₴${transaction[index].amount}'), //передаємо вартість
-                      ),
-                    ),
+            children: transaction
+                .map(
+                  (tx) => TransactionItem(
+                    // ств окремий файл цього віджету для легшого читання коду
+                    key: ValueKey(tx.id),
+                    transaction: tx,
+                    deleteTx: deleteTx,
                   ),
-                  title: Text(
-                    transaction[index].title, //назва транзакції
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    DateFormat.yMMMd()
-                        .format(transaction[index].date), //дата транзакції
-                  ),
-                  trailing: MediaQuery.of(context).size.width > 460
-                      ? FlatButton.icon(
-                          icon: Icon(Icons.delete_outlined),
-                          label: Text('Delete'),
-                          textColor: Theme.of(context).errorColor,
-                          onPressed: () => deleteTx(transaction[index].id),
-                        )
-                      : IconButton(
-                          //видалення транзакції
-                          onPressed: () => deleteTx(transaction[index]
-                              .id), //необхідно передати аргумент (наш ІД транзакції)
-                          icon: Icon(Icons.delete_outlined),
-                          color: Theme.of(context).errorColor,
-                        ), //останній елемент (видалення\корегування тощо)
-                ),
-              );
-            },
-            itemCount: transaction.length, //покращує опрацювання для прокрутки
+                )
+                .toList(),
           );
   }
 }

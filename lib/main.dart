@@ -92,12 +92,67 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final isLandscape = mediaQuery.orientation ==
-        Orientation.landscape; //Якщо наш гаджет в альбомному режимі
-    final PreferredSizeWidget appBar = (Platform.isIOS
+  List _buildLandscapeContent(
+    MediaQueryData mediaQuery,
+    PreferredSizeWidget appBar,
+    Widget txListWidget,
+  ) {
+    // віджет, який відображатиме контент в альбомному режимі
+    return [
+      Row(
+        //Якщо альбомний режим тоді відображати цей віджет
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Відображати діаграму'),
+          Switch.adaptive(
+            //Кнопка переключення
+            value: _showChart, //true or false
+            onChanged: (bool val) {
+              setState(() {
+                _showChart = val; //при перемиканні змінюємо наш State
+              });
+            },
+          ),
+        ],
+      ),
+      _showChart // Це змінна за допомогою якої при зміні значення ми відображаємо Діаграму чи пранзакції в альбомному відображенні
+          // if false
+          ? Container(
+              height: (mediaQuery.size
+                          .height - //Беремо всю висоту і віднімаємо висоту аппБару + лінії статусу (зверху)
+                      appBar.preferredSize
+                          .height - // Отримуємо дані аппБару за допомогою preferredSize
+                      mediaQuery
+                          .padding.top) * // Забираємо нашу лінію статусу зверху
+                  0.7, // відношення у відсотках щодо висоти
+              child: Chart(_recentTransactions))
+          // if true
+          : txListWidget //Присвоїна змінна віджету, оскільки ми оперуємо ним в декількох місьцях (насправді це хардкод, але в даному випадку це єдине рішення)
+    ];
+  }
+
+  List _buildPortraitContent(
+    MediaQueryData mediaQuery,
+    PreferredSizeWidget appBar,
+    Widget txListWidget,
+  ) {
+    // Якщо ми не в альбомному режимі то відображати віджети будемо так;
+    return [
+      Container(
+        height: (mediaQuery.size
+                    .height - //Беремо всю висоту і віднімаємо висоту аппБару + лінії статусу (зверху)
+                appBar.preferredSize
+                    .height - // Отримуємо дані аппБару за допомогою preferredSize
+                mediaQuery.padding.top) * // Забираємо нашу лінію статусу зверху
+            0.3, // відношення у відсотках щодо висоти
+        child: Chart(_recentTransactions),
+      ),
+      txListWidget
+    ];
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return (Platform.isIOS
         ? CupertinoNavigationBar(
             middle: Text(
               "Мої витрати",
@@ -125,6 +180,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           )) as PreferredSizeWidget;
+  }
+
+  @override // пояснюємо що це не помилка, а ми робимо це наміренно або це розширення класу
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation ==
+        Orientation.landscape; //Якщо наш гаджет в альбомному режимі
+    final PreferredSizeWidget appBar = _buildAppBar(); // Метод побудови коду (чистий код та легкий для читання не зважаючи, що його не зменшилось)
     final txListWidget = Container(
         // Transactions List
         height: (mediaQuery.size
@@ -139,56 +202,23 @@ class _MyHomePageState extends State<MyHomePage> {
       child: SingleChildScrollView(
         // Щоб віджет можна було скролити
         child: Column(
-          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (isLandscape)
-              Row(
-                //Якщо альбомний режим тоді відображати цей віджет
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Show Chart'),
-                  Switch.adaptive(
-                    //Кнопка переключення
-                    value: _showChart, //true or false
-                    onChanged: (bool val) {
-                      setState(() {
-                        _showChart = val; //при перемиканні змінюємо наш State
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ////////////////////////////////////////////////////////////////////
-            // Якщо ми не в альбомному режимі то відображати віджети будемо так
-            if (!isLandscape)
-              Container(
-                  height: (mediaQuery.size
-                              .height - //Беремо всю висоту і віднімаємо висоту аппБару + лінії статусу (зверху)
-                          appBar.preferredSize
-                              .height - // Отримуємо дані аппБару за допомогою preferredSize
-                          mediaQuery.padding
-                              .top) * // Забираємо нашу лінію статусу зверху
-                      0.3, // відношення у відсотках щодо висоти
-                  child: Chart(_recentTransactions)),
-            if (!isLandscape) txListWidget,
-            ////////////////////////////////////////////////////////////////////
-            if (isLandscape)
-              _showChart // Це змінна за допомогою якої при зміні значення ми відображаємо Діаграму чи пранзакції в альбомному відображенні
-                  // if false
-                  ? Container(
-                      height: (mediaQuery.size
-                                  .height - //Беремо всю висоту і віднімаємо висоту аппБару + лінії статусу (зверху)
-                              appBar.preferredSize
-                                  .height - // Отримуємо дані аппБару за допомогою preferredSize
-                              mediaQuery.padding
-                                  .top) * // Забираємо нашу лінію статусу зверху
-                          0.7, // відношення у відсотках щодо висоти
-                      child: Chart(_recentTransactions))
-                  // if true
-                  : txListWidget //Присвоїна змінна віджету, оскільки ми оперуємо ним в декількох місьцях (насправді це хардкод, але в даному випадку це єдине рішення)
-          ],
-        ),
+            //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isLandscape)
+                ..._buildLandscapeContent(
+                  mediaQuery,
+                  appBar,
+                  txListWidget,
+                ), //потрібні дужки, щоб Дарт розумів, що при цій умові треба відобразити цей віджет
+              if (!isLandscape)
+                ..._buildPortraitContent(
+                  // ... - спретовий оператор -- ми витягуємо всі елементи списку та об'єднюємо їх, як окремі елементи
+                  mediaQuery,
+                  appBar,
+                  txListWidget,
+                ),
+            ]),
       ),
     );
     return Platform.isIOS
